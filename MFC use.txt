@@ -1,0 +1,155 @@
+﻿
+1. libcurld.dll libcurl.dll 区别： 一个是调试版本。
+
+2. 添加依赖：
+
+属性->连接器->常规->附加库目录
+./lib
+属性->连接器->输入->附加依赖项
+libcurl.lib;json.lib;%(AdditionalDependencies)
+
+属性->C/C++->常规->附加包含目录
+./include;./include/curl;./include/json;
+
+解决：__invoke_watson 已经在 msvcrtd.lib(MSVCR100D.dll) 中定义 问题
+属性->连接器->输入->忽略特定默认款
+libcmt.lib
+
+DLL存放位置
+程序可执行文件位置
+DLL搜索顺序：
+当前进程的可执行模块所在的目录。
+当前目录。
+Windows 系统目录。GetSystemDirectory 函数检索此目录的路径。
+Windows 目录。GetWindowsDirectory 函数检索此目录的路径。
+PATH 环境变量中列出的目录。
+因此，放到以上任意一个目录下都可以。最简单的是第1个，放到exe文件所在的目录下
+
+3. 显示行号
+菜单里工具->选项->文本编辑器->c/c++里 显示行号勾选。
+
+4. 打包发布
+参考：http://blog.csdn.net/luoshixian099/article/details/49766051 
+
+5. 获取程序运行的目录
+GetModuleFileName(NULL,strPath.GetBufferSetLength(MAX_PATH+1), MAX_PATH+1);
+方便将文件写入程序运行的目录。
+
+6. MFC 工程内存泄露检测
+用vs（此时我使用的是2010）建MFC对话框程序。
+程序退出的时候输出窗口会提示是否有内存泄露，
+对于开发c/c++程序非常有用。
+
+7. fatal error C1853 预编译头文件来自编译器的早期版本号，或者预编译头为 C++ 而在 C 中使用它(或相反)
+解决方法： 右击提示出错的文件 属性->配置属性->c/c++->预编译头配置 
+预编译头：不使用预编译头
+
+8. 定时消息
+SetTimer(3, 1000, NULL); // nIDEvent=3, 1000 定时1秒 
+BOOL CWnd::KillTimer(UINT_PTR nIDEvent)
+void CUpdate::OnTimer(UINT_PTR nIDEvent)
+http://blog.csdn.net/dijkstar/article/details/8761481
+
+9. 2010 不支持 c++11的多线程函数库<thread>
+C1083: 无法打开包括文件:“thread”
+
+
+10. MFC里面RC资源编辑器不能打开的解决办法
+关闭所有打开的.h .cpp 文件就可以解决
+
+11. 解决回车键 ESC 默认关闭窗口的一般方法 
+原因： 回车消息默认调用了 确定按钮事件
+ESC调用了 取消按钮事件
+解决：对话框.h 增加virtual BOOL  CUpdate::PreTranslateMessage(MSG*   pMsg);
+.cpp 重载函数 处理消息
+BOOL  CUpdate::PreTranslateMessage(MSG*   pMsg)
+{  
+    if(pMsg->message==WM_KEYDOWN   &&   pMsg->wParam==VK_ESCAPE)     return   TRUE;  
+    if(pMsg->message==WM_KEYDOWN   &&   pMsg->wParam==VK_RETURN){
+        OnBnClickedOk();
+        return TRUE; 
+    }   
+    return   CDialog::PreTranslateMessage(pMsg);  
+}
+http://blog.csdn.net/xiliang_pan/article/details/7069802
+
+12. 内存泄露定位方法
+MFC: 代码运行入口（建议对话框初始化InitInstance出)_CrtSetBreakAlloc(2006) 
+2006是Detected memory leaks! {number}中的number 第几次分配的内存泄露。
+#define _CRTDBG_MAP_ALLOC 定义此宏 代码会断点到内存泄露的地方#define _CRTDBG_MAP_ALLOC 
+非MFC:
+#include "crtdbg.h" 
+//添加该头文件
+_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG)|_CRTDBG_LEAK_CHECK_DF);
+//运行时添加该语句，在内存泄露前添加，一般加到程序的入口函数中。
+//在头文件下面添加下面宏定义
+#ifdef _DEBUG
+#define new new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+
+#define _CRTDBG_MAP_ALLOC 定义此宏 代码会断点到内存泄露的地方#define _CRTDBG_MAP_ALLOC 
+
+http://blog.csdn.net/xuleisdjn/article/details/53100572
+
+
+13. vs c c++ 输出窗口输出信息
+方便查看，调试，复制。
+#ifdef DEBUG    
+#define print(str) {char sOut[2048]; sprintf(sOut,"%s\r\n",str); OutputDebugStringA(sOut);}    
+#endif 
+http://blog.csdn.net/charlesprince/article/details/3522342
+
+14. 字符编码 (待验证)
+VS 2013 新创建的cpp和h文件默认是GB2312的，为适应国际化需求，现在都使用UTF-8格式，下面教大家设置为默认UTF-8
+进入vs安装目录的 Microsoft Visual Studio 12.0\VC\vcprojectitems
+用 VS2013打开 newc++file.cpp 和 hfile.h 文件，
+在里边加入如下内容：
+
+#pragma once
+#pragma execution_character_set("utf-8") // 设置执行的编码为utf-8 可以避免转码问题
+// 本文件为utf-8 编码格式
+
+然后在VS顶部点击 文件 -> 高级保存选项 -> Unicode (UTF-8无签名) - 代码页 65001 
+然后点击 确定 保存即可。
+http://blog.csdn.net/maxwoods/article/details/44828295
+注意： vs编译器（2013）要支持暂时只支持带BOM的utf-8.
+所以使用utf-8的工程 可以修改新建文件为utf-8带BOM的模板。 针对纯c c++的项目我觉得可以。
+针对不带BOM的 utf-8文件方式， 此时需要加上#pragma execution_character_set("utf-8")
+使执行为utf-8的环境，可以此时 输出汉子会乱码。不过针对 纯C, C++ 的项目我觉得还是可以的。
+
+linux 下utf bom 去除
+https://www.cnblogs.com/Mach-he/p/6683074.html?utm_source=itdadao&utm_medium=referral
+http://blog.sina.com.cn/s/blog_50ebb8ad0102vkg3.html
+
+15. 调试常用
+* vs的Debug模式定义了_DEBUG 宏，开发的时候可以使用。
+* 在MFC下 添加如下代码 控制台可以同时输出
+#pragma comment( linker, "/subsystem:console" ) 
+#pragma comment( linker, "/entry:\"WinMainCRTStartup\"" ) 
+
+16. MFC 任务栏点击
+// 任务栏点击 最小化和回复切换设置
+    ModifyStyle(0, WS_MINIMIZEBOX);
+
+17. dll lib 介绍
+http://www.cppblog.com/amazon/archive/2009/09/04/95318.html
+
+附录：
+* MFC教程
+http://blog.sina.com.cn/s/blog_671f486a0102voqr.html
+http://www.jizhuomi.com/software/153.html
+
+不错的入门教程：
+http://www.jizhuomi.com/school/c/151.html
+* dll下载地址 
+用于dll缺失的搜索下载地址
+https://www.dll-files.com
+* 目录、附加依赖项、库目录及具体设置
+http://blog.csdn.net/xiaorenwukechi/article/details/39249401
+
+常见错误：
+1.::{ctor}”: 构造函数不能有返回类型 
+原因头文件里的class后面忘记加  “ ; ”了
+
+从一个MFC工程移植对话框类到另一个MFC工程
+http://blog.csdn.net/wowoandlyn/article/details/2937785
