@@ -1,4 +1,4 @@
-﻿
+
 1. libcurld.dll libcurl.dll 区别： 一个是调试版本。
 
 2. 添加依赖：
@@ -45,6 +45,10 @@ GetModuleFileName(NULL,strPath.GetBufferSetLength(MAX_PATH+1), MAX_PATH+1);
 预编译头：不使用预编译头
 
 8. 定时消息
+BEGIN_MESSAGE_MAP(CUpdate, CPlayerDlg)
+    ON_WM_TIMER()
+    // ...
+END_MESSAGE_MAP()
 SetTimer(3, 1000, NULL); // nIDEvent=3, 1000 定时1秒 
 BOOL CWnd::KillTimer(UINT_PTR nIDEvent)
 void CUpdate::OnTimer(UINT_PTR nIDEvent)
@@ -153,3 +157,58 @@ http://blog.csdn.net/xiaorenwukechi/article/details/39249401
 
 从一个MFC工程移植对话框类到另一个MFC工程
 http://blog.csdn.net/wowoandlyn/article/details/2937785
+
+
+MFC webview 网页开发
+使用MFC自带的CDHtmlDialog类。
+可以行弹出对话框一样操作。
+
+视图资源添加 右键 类导向添加CDHtmlDialog类
+
+http://www.moon-soft.com/program/bbs/readelite919494.htm
+
+CDHtmlDialog类 微软文档
+https://technet.microsoft.com/zh-cn/library/8bed8k60.aspx#CDHtmlDialog::Navigate
+
+参考
+CEF嵌入基于chrome内核浏览器
+http://blog.csdn.net/mfcing/article/details/43953433
+
+
+16. 文件下载
+* 启动线程 
+
+// 介绍了下载进度 实现方式
+https://www.cnblogs.com/lidabo/p/6405369.html
+// 下载进度 断点续载
+http://www.linuxidc.com/Linux/2014-10/107509.htm
+// 取消下载 未验证
+http://bbs.csdn.net/topics/390779255
+// curl c++ 封装 未验证
+http://blog.csdn.net/mfcing/article/details/50775164
+// curl c++ 封装断点续传 未验证 
+http://blog.csdn.net/xiaojun111111/article/details/53032126
+* 停止 退出
+使用清除curl_easy_cleanup(curl);curl==NULL; // 验证有效
+传递指针 需要指向指针的指针。 如： void *p; fun(void **para){*para=(void*);} 
+两种方式来暂停下载：
+方法一：CURLcode curl_easy_pause(CURL *handle , int bitmask);  调用这个函数
+或者
+方法二：让读或写操作的回调函数返回 CURL_READFUNC_PAUSE 或 CURL_WRITEFUNC_PAUSE 来暂停连接
+
+17 文件输出
+标准错误输出：void perror ( const char * str );
+标准输入 输出 
+可以使用freopen 重定向 stdin stdout stderr
+日志 错误信息  调试信息。
+备注：重定向错误输出后 perror("error redirecting stderr\n");输出找不到了
+所以错误输出建议：fprintf(stderr, "stderr after : hello world\n");
+原因应该是并没有发生系统错误 perror会把错误号errorno输出。
+
+https://www.cnblogs.com/Jason9988/p/4755692.html
+
+18 zip 解压压缩
+
+参考：
+http://blog.csdn.net/wangshubo1989/article/details/52847891
+http://www.codeproject.com/Articles/7530/Zip-Utils-clean-elegant-simple-C-Win
